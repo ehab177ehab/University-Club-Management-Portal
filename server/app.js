@@ -5,6 +5,8 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth');
 const { authenticate } = require('./middleware/auth');
 
+const clubRoutes = require('./routes/clubs');
+
 const app = express();
 
 app.use(cors());
@@ -12,6 +14,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/clubs', clubRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
