@@ -15,6 +15,8 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/clubs', clubRoutes);
+const eventRoutes = require('./routes/events');
+app.use('/api/events', eventRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
