@@ -4,19 +4,27 @@ require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
 const { authenticate } = require('./middleware/auth');
-
 const clubRoutes = require('./routes/clubs');
+const eventRoutes = require('./routes/events');
+const rsvpRoutes = require('./routes/rsvps');
 
 const app = express();
 
-app.use(cors());
+const corsOptions = {
+  origin: 'http://localhost:5173',
+  methods: ['GET', 'POST', 'DELETE', 'PATCH', 'PUT', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
+app.options('/{*path}', cors(corsOptions));
 app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/clubs', clubRoutes);
-const eventRoutes = require('./routes/events');
 app.use('/api/events', eventRoutes);
+app.use('/api/rsvps', rsvpRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
