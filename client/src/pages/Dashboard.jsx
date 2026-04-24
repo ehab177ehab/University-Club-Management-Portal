@@ -16,7 +16,10 @@ export default function Dashboard() {
     }
     setUser(JSON.parse(stored))
     fetchEvents()
+    fetchMyRsvps()
   }, [navigate])
+
+  
 
   const fetchEvents = async () => {
     try {
@@ -27,6 +30,19 @@ export default function Dashboard() {
       console.error('Failed to fetch events')
     }
   }
+
+  const fetchMyRsvps = async () => {
+  try {
+    const token = localStorage.getItem('token')
+    const res = await fetch('http://localhost:3000/api/rsvps/my', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    const data = await res.json()
+    setRsvpdEvents(new Set(data))
+  } catch {
+    console.error('Failed to fetch RSVPs')
+  }
+}
 
   const handleRSVP = async (eventId) => {
     const token = localStorage.getItem('token')

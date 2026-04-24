@@ -4,6 +4,20 @@ const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
 
+// GET user's existing RSVPs
+router.get('/my', authenticate, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT event_id FROM rsvps WHERE user_id = $1',
+      [req.user.id]
+    );
+    res.json(result.rows.map(r => r.event_id));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // POST rsvp to an event
 router.post('/:eventId', authenticate, async (req, res) => {
   const { eventId } = req.params;

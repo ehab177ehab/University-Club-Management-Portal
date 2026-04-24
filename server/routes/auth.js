@@ -18,6 +18,7 @@ router.post('/register', async (req, res) => {
     if (existing.rows.length > 0) {
       return res.status(400).json({ error: 'Email already registered' });
     }
+    
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
