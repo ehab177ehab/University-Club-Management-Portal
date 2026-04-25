@@ -4,6 +4,20 @@ const { authenticate, authorize } = require('../middleware/auth');
 
 const router = express.Router();
 
+// GET clubs the current user has joined
+router.get('/my', authenticate, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT club_id FROM club_members WHERE user_id = $1',
+      [req.user.id]
+    );
+    res.json(result.rows.map(r => r.club_id));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // GET all clubs
 router.get('/', async (req, res) => {
   try {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 export default function Dashboard() {
   const [user, setUser] = useState(null)
@@ -7,6 +7,8 @@ export default function Dashboard() {
   const [rsvpdEvents, setRsvpdEvents] = useState(new Set())
   const [message, setMessage] = useState('')
   const navigate = useNavigate()
+  const location = useLocation()
+  const [joinedClubs, setJoinedClubs] = useState([])
 
   useEffect(() => {
     const stored = localStorage.getItem('user')
@@ -17,6 +19,7 @@ export default function Dashboard() {
     setUser(JSON.parse(stored))
     fetchEvents()
     fetchMyRsvps()
+    fetchMyClubs()
   }, [navigate])
 
   
@@ -43,6 +46,19 @@ export default function Dashboard() {
     console.error('Failed to fetch RSVPs')
   }
 }
+const fetchMyClubs = async () => {
+  try {
+    const token = localStorage.getItem('token')
+    const res = await fetch('http://localhost:3000/api/clubs/my', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    const data = await res.json()
+    setJoinedClubs(data)
+  } catch {
+    console.error('Failed to fetch my clubs')
+  }
+}
+
 
   const handleRSVP = async (eventId) => {
     const token = localStorage.getItem('token')
@@ -96,16 +112,21 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gray-950 text-white">
       <nav className="bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-sm font-bold">U</div>
-          <span className="font-semibold text-white">University Club Portal</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-gray-400 text-sm">{user.email}</span>
-          <span className="bg-blue-600/20 text-blue-400 text-xs px-3 py-1 rounded-full border border-blue-500/30">{user.role}</span>
-          <button onClick={handleLogout} className="text-gray-400 hover:text-white text-sm transition">Logout</button>
-        </div>
-      </nav>
+  <div className="flex items-center gap-3">
+    <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-sm font-bold">U</div>
+    <span className="font-semibold text-white">University Club Portal</span>
+  </div>
+  <div className="flex items-center gap-10">
+    <button onClick={() => navigate('/dashboard')} className={`text-sm font-medium pb-0.5 transition ${location.pathname === '/dashboard' ? 'text-white border-b-2 border-blue-500' : 'text-gray-400 hover:text-white'}`}>Dashboard</button>
+    <button onClick={() => navigate('/clubs')} className={`text-sm font-medium pb-0.5 transition ${location.pathname === '/clubs' ? 'text-white border-b-2 border-blue-500' : 'text-gray-400 hover:text-white'}`}>Clubs</button>
+    <button onClick={() => navigate('/events')} className={`text-sm font-medium pb-0.5 transition ${location.pathname === '/events' ? 'text-white border-b-2 border-blue-500' : 'text-gray-400 hover:text-white'}`}>Events</button>
+  </div>
+  <div className="flex items-center gap-4">
+    <span className="text-gray-400 text-sm">{user?.email}</span>
+    <span className="bg-blue-600/20 text-blue-400 text-xs px-3 py-1 rounded-full border border-blue-500/30">{user?.role}</span>
+    <button onClick={handleLogout} className="text-gray-400 hover:text-white text-sm transition">Logout</button>
+  </div>
+</nav>
 
       <div className="max-w-6xl mx-auto px-6 py-10">
         <div className="mb-8">
@@ -122,7 +143,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-3 gap-4 mb-10">
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
             <p className="text-gray-400 text-sm">My Clubs</p>
-            <p className="text-3xl font-bold mt-1">0</p>
+            <p className="text-3xl font-bold mt-1">{joinedClubs.length}</p>
           </div>
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
             <p className="text-gray-400 text-sm">Upcoming Events</p>

@@ -17,6 +17,19 @@ router.get('/my', authenticate, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+// GET rsvp count for an event
+router.get('/count/:eventId', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT COUNT(*) FROM rsvps WHERE event_id = $1',
+      [req.params.eventId]
+    );
+    res.json({ count: parseInt(result.rows[0].count) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 // POST rsvp to an event
 router.post('/:eventId', authenticate, async (req, res) => {
