@@ -52,5 +52,43 @@ router.delete('/:id', authenticate, authorize('super_admin'), async (req, res) =
     res.status(500).json({ error: 'Server error' });
   }
 });
+// POST join a club
+router.post('/:id/join', authenticate, async (req, res) => {
+  const userId = req.user.id;
+  const clubId = req.params.id;
+  try {
+    const existing = await pool.query(
+      'SELECT id FROM club_members WHERE club_id = $1 AND user_id = $2',
+      [clubId, userId]
+    );
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ error: 'Already a member' });
+    }
+    await pool.query(
+      'INSERT INTO club_members (club_id, user_id) VALUES ($1, $2)',
+      [clubId, userId]
+    );
+    res.status(201).json({ message: 'Joined club successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// DELETE leave a club
+router.delete('/:id/leave', authenticate, async (req, res) => {
+  const userId = req.user.id;
+  const clubId = req.params.id;
+  try {
+    await pool.query(
+      'DELETE FROM club_members WHERE club_id = $1 AND user_id = $2',
+      [clubId, userId]
+    );
+    res.json({ message: 'Left club successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 module.exports = router;
