@@ -125,6 +125,7 @@ export default function Clubs() {
                 <div className="p-5">
                   <h3 className="font-semibold text-white text-lg mb-1">{club.name}</h3>
                   <p className="text-gray-400 text-sm mb-4 line-clamp-2">{club.description}</p>
+                  <p className="text-gray-500 text-xs mb-4">👥 {club.member_count} {club.member_count === '1' ? 'member' : 'members'}</p>
                   <div className="flex items-center justify-between">
                     <button
                       onClick={() => navigate(`/clubs/${club.id}`)}

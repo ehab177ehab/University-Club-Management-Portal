@@ -21,7 +21,13 @@ router.get('/my', authenticate, async (req, res) => {
 // GET all clubs
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM clubs ORDER BY created_at DESC');
+    const result = await pool.query(`
+      SELECT c.*, COUNT(cm.id) as member_count
+      FROM clubs c
+      LEFT JOIN club_members cm ON c.id = cm.club_id
+      GROUP BY c.id
+      ORDER BY c.created_at DESC
+    `);
     res.json(result.rows);
   } catch (err) {
     console.error(err);
