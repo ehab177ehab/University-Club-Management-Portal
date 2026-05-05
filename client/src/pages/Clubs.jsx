@@ -118,31 +118,21 @@ export default function Clubs() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {clubs.map(club => (
-              <div key={club.id} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition">
+              <div key={club.id} onClick={() => navigate(`/clubs/${club.id}`)} className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-gray-700 transition cursor-pointer">
                 {club.image_url && (
                   <img src={club.image_url} alt={club.name} className="w-full h-40 object-cover" />
                 )}
+                
                 <div className="p-5">
                   <h3 className="font-semibold text-white text-lg mb-1">{club.name}</h3>
                   <p className="text-gray-400 text-sm mb-4 line-clamp-2">{club.description}</p>
                   <p className="text-gray-500 text-xs mb-4">👥 {club.member_count} {club.member_count === '1' ? 'member' : 'members'}</p>
                   <div className="flex items-center justify-between">
-                    <button
-                      onClick={() => navigate(`/clubs/${club.id}`)}
-                      className="text-blue-400 hover:text-blue-300 text-sm transition"
-                    >
-                      View details →
-                    </button>
-                    {user?.role === 'student' && (
-                      <button
-                        onClick={() => handleJoinLeave(club.id)}
-                        className={`text-sm px-4 py-1.5 rounded-lg transition ${joinedClubs.has(club.id) ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
-                      >
-                        {joinedClubs.has(club.id) ? 'Leave' : 'Join'}
-                      </button>
-                    )}
+                    
                   </div>
+                  
                 </div>
+                
               </div>
             ))}
           </div>

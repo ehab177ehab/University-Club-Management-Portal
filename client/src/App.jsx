@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard'
 import Clubs from './pages/Clubs'
 import Events from './pages/Events'
 import EventDetail from './pages/EventDetail'
+import ClubDetail from './pages/ClubDetail'
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route path="/events" element={<Events />} />
         <Route path="/events/:id" element={<EventDetail />} />
+        <Route path="/clubs/:id" element={<ClubDetail />} />
       </Routes>
     </BrowserRouter>
   )

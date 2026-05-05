@@ -38,7 +38,13 @@ router.get('/', async (req, res) => {
 // GET single club
 router.get('/:id', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM clubs WHERE id = $1', [req.params.id]);
+    const result = await pool.query(`
+      SELECT c.*, COUNT(cm.id) as member_count
+      FROM clubs c
+      LEFT JOIN club_members cm ON c.id = cm.club_id
+      WHERE c.id = $1
+      GROUP BY c.id
+    `, [req.params.id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Club not found' });
     res.json(result.rows[0]);
   } catch (err) {

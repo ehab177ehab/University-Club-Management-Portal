@@ -7,13 +7,20 @@ const router = express.Router();
 // GET all upcoming events
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query(`
+    const { club_id } = req.query;
+    let query = `
       SELECT e.*, c.name as club_name, c.image_url as club_image
       FROM events e
       JOIN clubs c ON e.club_id = c.id
       WHERE e.status = 'upcoming'
-      ORDER BY e.date ASC
-    `);
+    `;
+    const params = [];
+    if (club_id) {
+      params.push(club_id);
+      query += ` AND e.club_id = $1`;
+    }
+    query += ` ORDER BY e.date ASC`;
+    const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (err) {
     console.error(err);
