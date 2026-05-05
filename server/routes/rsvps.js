@@ -17,6 +17,25 @@ router.get('/my', authenticate, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// GET full event details for user's RSVPs
+router.get('/my/events', authenticate, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT e.*, c.name as club_name, c.image_url as club_image
+      FROM events e
+      JOIN rsvps r ON e.id = r.event_id
+      JOIN clubs c ON e.club_id = c.id
+      WHERE r.user_id = $1
+      ORDER BY e.date ASC
+    `, [req.user.id]);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // GET rsvp count for an event
 router.get('/count/:eventId', async (req, res) => {
   try {

@@ -25,14 +25,17 @@ export default function Dashboard() {
   
 
   const fetchEvents = async () => {
-    try {
-      const res = await fetch('http://localhost:3000/api/events')
-      const data = await res.json()
-      setEvents(data)
-    } catch {
-      console.error('Failed to fetch events')
-    }
+  try {
+    const token = localStorage.getItem('token')
+    const res = await fetch('http://localhost:3000/api/rsvps/my/events', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    const data = await res.json()
+    setEvents(data)
+  } catch {
+    console.error('Failed to fetch my events')
   }
+}
 
   const fetchMyRsvps = async () => {
   try {
@@ -141,25 +144,25 @@ const fetchMyClubs = async () => {
         )}
 
         <div className="grid grid-cols-3 gap-4 mb-10">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-            <p className="text-gray-400 text-sm">My Clubs</p>
-            <p className="text-3xl font-bold mt-1">{joinedClubs.length}</p>
-          </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-            <p className="text-gray-400 text-sm">Upcoming Events</p>
-            <p className="text-3xl font-bold mt-1">{events.length}</p>
-          </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-            <p className="text-gray-400 text-sm">My RSVPs</p>
-            <p className="text-3xl font-bold mt-1">{rsvpdEvents.size}</p>
-          </div>
-        </div>
+  <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+    <p className="text-gray-400 text-sm">My Clubs</p>
+    <p className="text-3xl font-bold mt-1">{joinedClubs.length}</p>
+  </div>
+  <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+    <p className="text-gray-400 text-sm">My RSVPs</p>
+    <p className="text-3xl font-bold mt-1">{rsvpdEvents.size}</p>
+  </div>
+  <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+    <p className="text-gray-400 text-sm">Upcoming Events</p>
+    <p className="text-3xl font-bold mt-1">{events.length}</p>
+  </div>
+</div>
 
         <div>
-          <h2 className="text-lg font-semibold mb-4">Upcoming Events</h2>
+          <h2 className="text-lg font-semibold mb-4">My RSVPd Events</h2>
           {events.length === 0 ? (
             <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
-              <p className="text-gray-500">No events yet. Check back soon!</p>
+              <p className="text-gray-500">You haven't RSVPd to any events yet. <button onClick={() => navigate('/events')} className="text-blue-400 hover:text-blue-300">Browse events →</button></p>
             </div>
           ) : (
             <div className="grid gap-4">
