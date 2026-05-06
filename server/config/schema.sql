@@ -43,8 +43,8 @@ CREATE TABLE events (
   members_only BOOLEAN DEFAULT false,
   status VARCHAR(20) DEFAULT 'upcoming' CHECK (status IN ('upcoming', 'ongoing', 'cancelled')),
   created_by UUID REFERENCES users(id) ON DELETE SET NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  rsvp_deadline TIMESTAMP
 );
 
 CREATE TABLE rsvps (

@@ -43,6 +43,7 @@ erDiagram
     string status
     uuid created_by FK
     timestamp created_at
+    timestamp rsvp_deadline
   }
   rsvps {
     uuid id PK
@@ -50,6 +51,15 @@ erDiagram
     uuid user_id FK
     timestamp created_at
   }
+
+  notifications {
+  uuid id PK
+  uuid user_id FK
+  string type
+  string message
+  boolean is_read
+  timestamp created_at
+}
 
   users ||--o{ club_admins : "is assigned as"
   clubs ||--o{ club_admins : "has"
@@ -60,6 +70,7 @@ erDiagram
   events ||--o{ rsvps : "receives"
   users ||--o{ clubs : "creates"
   users ||--o{ events : "creates"
+  users ||--o{ notifications : "receives"
 ```
 
 ## Relationship Rules
