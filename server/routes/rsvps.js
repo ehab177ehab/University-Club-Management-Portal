@@ -3,6 +3,7 @@ const pool = require('../config/db');
 const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
+const notify = require('../config/notify');
 
 // GET user's existing RSVPs
 router.get('/my', authenticate, async (req, res) => {
@@ -90,6 +91,8 @@ router.post('/:eventId', authenticate, async (req, res) => {
       [eventId, userId]
     );
 
+    await notify(userId, 'rsvp', `You RSVPd to "${e.title}"`);
+
     res.status(201).json({ message: 'RSVP successful' });
   } catch (err) {
     console.error(err);
@@ -107,6 +110,8 @@ router.delete('/:eventId', authenticate, async (req, res) => {
       'DELETE FROM rsvps WHERE event_id = $1 AND user_id = $2',
       [eventId, userId]
     );
+    await notify(userId, 'rsvp_cancel', `You cancelled your RSVP for an event`);
+    
     res.json({ message: 'RSVP cancelled' });
   } catch (err) {
     console.error(err);

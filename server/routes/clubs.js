@@ -3,20 +3,8 @@ const pool = require('../config/db');
 const { authenticate, authorize } = require('../middleware/auth');
 
 const router = express.Router();
+const notify = require('../config/notify');
 
-// GET clubs the current user has joined
-router.get('/my', authenticate, async (req, res) => {
-  try {
-    const result = await pool.query(
-      'SELECT club_id FROM club_members WHERE user_id = $1',
-      [req.user.id]
-    );
-    res.json(result.rows.map(r => r.club_id));
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
 
 // GET all clubs
 router.get('/', async (req, res) => {
@@ -34,6 +22,40 @@ router.get('/', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// GET clubs the current user has joined
+router.get('/my', authenticate, async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT club_id FROM club_members WHERE user_id = $1',
+      [req.user.id]
+    );
+    res.json(result.rows.map(r => r.club_id));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+// GET full club details for clubs user has joined
+router.get('/my/details', authenticate, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT c.*, COUNT(cm2.id) as member_count
+      FROM clubs c
+      JOIN club_members cm ON c.id = cm.club_id
+      LEFT JOIN club_members cm2 ON c.id = cm2.club_id
+      WHERE cm.user_id = $1
+      GROUP BY c.id
+      ORDER BY c.name ASC
+    `, [req.user.id]);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
 
 // GET single club
 router.get('/:id', async (req, res) => {
@@ -94,6 +116,10 @@ router.post('/:id/join', authenticate, async (req, res) => {
       'INSERT INTO club_members (club_id, user_id) VALUES ($1, $2)',
       [clubId, userId]
     );
+    
+    const club = await pool.query('SELECT name FROM clubs WHERE id = $1', [clubId]);
+    await notify(userId, 'club_join', `You joined "${club.rows[0].name}"`);
+    
     res.status(201).json({ message: 'Joined club successfully' });
   } catch (err) {
     console.error(err);
@@ -110,6 +136,9 @@ router.delete('/:id/leave', authenticate, async (req, res) => {
       'DELETE FROM club_members WHERE club_id = $1 AND user_id = $2',
       [clubId, userId]
     );
+    const club = await pool.query('SELECT name FROM clubs WHERE id = $1', [clubId]);
+    await notify(userId, 'club_leave', `You left "${club.rows[0].name}"`);
+
     res.json({ message: 'Left club successfully' });
   } catch (err) {
     console.error(err);

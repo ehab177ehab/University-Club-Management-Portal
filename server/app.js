@@ -7,7 +7,7 @@ const { authenticate } = require('./middleware/auth');
 const clubRoutes = require('./routes/clubs');
 const eventRoutes = require('./routes/events');
 const rsvpRoutes = require('./routes/rsvps');
-
+const notificationRoutes = require('./routes/notifications');
 const app = express();
 
 const corsOptions = {
@@ -25,6 +25,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/clubs', clubRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/rsvps', rsvpRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
