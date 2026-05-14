@@ -28,7 +28,14 @@ export default function Login() {
 
       localStorage.setItem('token', data.token)
       localStorage.setItem('user', JSON.stringify(data.user))
-      navigate('/dashboard')
+      
+      if (data.user.role === 'super_admin') {
+         navigate('/admin')
+       }    else if (data.user.role === 'club_admin') {
+           navigate('/club-admin')
+          } else {
+             navigate('/dashboard')
+        }
     } catch {
       setError('Something went wrong. Try again.')
     } finally {

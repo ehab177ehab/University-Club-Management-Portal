@@ -6,6 +6,9 @@ import Clubs from './pages/Clubs'
 import Events from './pages/Events'
 import EventDetail from './pages/EventDetail'
 import ClubDetail from './pages/ClubDetail'
+import AdminDashboard from './pages/superadmin/SuperAdminDashboard'
+import SuperAdminClubs from './pages/superadmin/SuperAdminClubs'
+import SuperAdminUsers from './pages/superadmin/SuperAdminUsers'
 
 function App() {
   return (
@@ -19,6 +22,9 @@ function App() {
         <Route path="/events" element={<Events />} />
         <Route path="/events/:id" element={<EventDetail />} />
         <Route path="/clubs/:id" element={<ClubDetail />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/clubs" element={<SuperAdminClubs />} />
+        <Route path="/admin/users" element={<SuperAdminUsers />} />
       </Routes>
     </BrowserRouter>
   )
