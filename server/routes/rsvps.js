@@ -63,13 +63,19 @@ router.post('/:eventId', authenticate, async (req, res) => {
     const e = event.rows[0];
 
     // Check members only
-    if (e.members_only) {
-      const member = await pool.query(
-        'SELECT id FROM club_members WHERE club_id = $1 AND user_id = $2',
-        [e.club_id, userId]
-      );
-      if (member.rows.length === 0) return res.status(403).json({ error: 'This event is for club members only' });
-    }
+if (e.members_only) {
+  const member = await pool.query(
+    'SELECT id FROM club_members WHERE club_id = $1 AND user_id = $2',
+    [e.club_id, userId]
+  );
+  const admin = await pool.query(
+    'SELECT id FROM club_admins WHERE club_id = $1 AND user_id = $2',
+    [e.club_id, userId]
+  );
+  if (member.rows.length === 0 && admin.rows.length === 0) {
+    return res.status(403).json({ error: 'This event is for club members only' });
+  }
+}
 
     // Check capacity
     if (e.capacity) {

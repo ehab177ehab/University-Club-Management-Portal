@@ -87,6 +87,11 @@ export default function Events() {
     <button onClick={() => navigate('/events')} className={`text-sm font-medium pb-0.5 transition ${location.pathname === '/events' ? 'text-white border-b-2 border-blue-500' : 'text-gray-400 hover:text-white'}`}>Events</button>
   </div>
   <div className="flex items-center gap-4">
+    {user?.role === 'club_admin' && (
+  <button onClick={() => navigate('/club-admin')} className="text-purple-400 hover:text-purple-300 text-sm transition">
+    Club Panel
+  </button>
+)}
     <span className="text-gray-400 text-sm">{user?.email}</span>
     <span className="bg-blue-600/20 text-blue-400 text-xs px-3 py-1 rounded-full border border-blue-500/30">{user?.role}</span>
     <button onClick={handleLogout} className="text-gray-400 hover:text-white text-sm transition">Logout</button>

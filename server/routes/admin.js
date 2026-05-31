@@ -68,6 +68,10 @@ if (existing.rows.length > 0) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
+  await pool.query(
+  'INSERT INTO club_members (club_id, user_id) VALUES ($1, $2) ON CONFLICT (club_id, user_id) DO NOTHING',
+  [club_id, userId]
+);
 });
 
 // PATCH demote club_admin back to student

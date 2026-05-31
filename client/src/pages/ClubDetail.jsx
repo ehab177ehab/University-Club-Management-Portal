@@ -55,23 +55,23 @@ export default function ClubDetail() {
     }
   }
 
-  const handleJoinLeave = async () => {
-    const token = localStorage.getItem('token')
-    try {
-      const res = await fetch(`http://localhost:3000/api/clubs/${id}/${joined ? 'leave' : 'join'}`, {
-        method: joined ? 'DELETE' : 'POST',
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      const data = await res.json()
-      if (!res.ok) { setMessage(data.error); return }
-      setJoined(!joined)
-      setMessage(joined ? 'Left club' : 'Joined club!')
-      fetchClub()
-    } catch {
-      setMessage('Something went wrong')
-    }
-    setTimeout(() => setMessage(''), 3000)
+const handleJoinLeave = async () => {
+  const token = localStorage.getItem('token')
+  try {
+    const res = await fetch(`http://localhost:3000/api/clubs/${id}/${joined ? 'leave' : 'join'}`, {
+      method: joined ? 'DELETE' : 'POST',
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    const data = await res.json()
+    if (!res.ok) { setMessage(data.error); return }
+    setJoined(!joined)
+    setMessage(joined ? 'Left club' : 'Joined club!')
+    fetchClub()
+  } catch {
+    setMessage('Something went wrong')
   }
+  setTimeout(() => setMessage(''), 3000)
+}
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -105,6 +105,11 @@ export default function ClubDetail() {
           <button onClick={() => navigate('/events')} className="text-gray-400 hover:text-white text-sm font-medium transition">Events</button>
         </div>
         <div className="flex items-center gap-4">
+          {user?.role === 'club_admin' && (
+  <button onClick={() => navigate('/club-admin')} className="text-purple-400 hover:text-purple-300 text-sm transition">
+    Club Panel
+  </button>
+)}
           <span className="text-gray-400 text-sm">{user?.email}</span>
           <span className="bg-blue-600/20 text-blue-400 text-xs px-3 py-1 rounded-full border border-blue-500/30">{user?.role}</span>
           <button onClick={handleLogout} className="text-gray-400 hover:text-white text-sm transition">Logout</button>
@@ -148,9 +153,9 @@ export default function ClubDetail() {
               </div>
             </div>
 
-            {user?.role === 'student' && (
-              <button
-                onClick={handleJoinLeave}
+            {(user?.role === 'student' || user?.role === 'club_admin') && (
+  <button
+    onClick={() => handleJoinLeave(club.id)}
                 className={`w-full py-3 rounded-xl font-medium transition ${joined ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
               >
                 {joined ? 'Leave Club' : 'Join Club'}

@@ -100,6 +100,11 @@ export default function EventDetail() {
           <button onClick={() => navigate('/events')} className="text-white text-sm font-medium border-b-2 border-blue-500 pb-0.5">Events</button>
         </div>
         <div className="flex items-center gap-4">
+          {user?.role === 'club_admin' && (
+  <button onClick={() => navigate('/club-admin')} className="text-purple-400 hover:text-purple-300 text-sm transition">
+    Club Panel
+  </button>
+)}
           <span className="text-gray-400 text-sm">{user?.email}</span>
           <span className="bg-blue-600/20 text-blue-400 text-xs px-3 py-1 rounded-full border border-blue-500/30">{user?.role}</span>
           <button onClick={handleLogout} className="text-gray-400 hover:text-white text-sm transition">Logout</button>

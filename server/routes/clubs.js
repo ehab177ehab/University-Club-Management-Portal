@@ -116,6 +116,14 @@ router.post('/:id/join', authenticate, async (req, res) => {
       'INSERT INTO club_members (club_id, user_id) VALUES ($1, $2)',
       [clubId, userId]
     );
+    // Check if user is admin of this club
+const isAdmin = await pool.query(
+  'SELECT id FROM club_admins WHERE club_id = $1 AND user_id = $2',
+  [clubId, userId]
+);
+if (isAdmin.rows.length > 0) {
+  return res.status(400).json({ error: 'You are the admin of this club' });
+}
     
     const club = await pool.query('SELECT name FROM clubs WHERE id = $1', [clubId]);
     await notify(userId, 'club_join', `You joined "${club.rows[0].name}"`);
@@ -127,18 +135,28 @@ router.post('/:id/join', authenticate, async (req, res) => {
   }
 });
 
+
+
 // DELETE leave a club
 router.delete('/:id/leave', authenticate, async (req, res) => {
   const userId = req.user.id;
   const clubId = req.params.id;
   try {
+    // Prevent club admin from leaving their own club
+    const isAdmin = await pool.query(
+      'SELECT id FROM club_admins WHERE club_id = $1 AND user_id = $2',
+      [clubId, userId]
+    );
+    if (isAdmin.rows.length > 0) {
+      return res.status(400).json({ error: 'Club admins cannot leave their own club' });
+    }
+
     await pool.query(
       'DELETE FROM club_members WHERE club_id = $1 AND user_id = $2',
       [clubId, userId]
     );
     const club = await pool.query('SELECT name FROM clubs WHERE id = $1', [clubId]);
     await notify(userId, 'club_leave', `You left "${club.rows[0].name}"`);
-
     res.json({ message: 'Left club successfully' });
   } catch (err) {
     console.error(err);

@@ -10,6 +10,7 @@ const rsvpRoutes = require('./routes/rsvps');
 const notificationRoutes = require('./routes/notifications');
 const app = express();
 const adminRoutes = require('./routes/admin');
+const clubAdminRoutes = require('./routes/clubAdmin');
 
 const corsOptions = {
   origin: 'http://localhost:5173',
@@ -28,6 +29,7 @@ app.use('/api/events', eventRoutes);
 app.use('/api/rsvps', rsvpRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/club-admin', clubAdminRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

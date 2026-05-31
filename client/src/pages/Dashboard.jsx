@@ -120,6 +120,11 @@ export default function Dashboard() {
           <button onClick={() => navigate('/events')} className="text-gray-400 hover:text-white text-sm font-medium transition">Events</button>
         </div>
         <div className="flex items-center gap-4">
+          {user.role === 'club_admin' && (
+          <button onClick={() => navigate('/club-admin')} className="text-purple-400 hover:text-purple-300 text-sm transition">
+            Club Panel
+            </button>
+          )}
           <span className="text-gray-400 text-sm">{user.email}</span>
           <span className="bg-blue-600/20 text-blue-400 text-xs px-3 py-1 rounded-full border border-blue-500/30">{user.role}</span>
           <button onClick={handleLogout} className="text-gray-400 hover:text-white text-sm transition">Logout</button>
