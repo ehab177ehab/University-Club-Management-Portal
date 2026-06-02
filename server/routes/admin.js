@@ -104,4 +104,56 @@ router.delete('/users/:id', authenticate, authorize('super_admin'), async (req, 
   }
 });
 
+// GET all events
+router.get('/events', authenticate, authorize('super_admin'), async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT e.*, c.name as club_name, COUNT(r.id) as rsvp_count
+      FROM events e
+      JOIN clubs c ON e.club_id = c.id
+      LEFT JOIN rsvps r ON e.id = r.event_id
+      GROUP BY e.id, c.name
+      ORDER BY e.date DESC
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PATCH edit any event
+router.patch('/events/:id', authenticate, authorize('super_admin'), async (req, res) => {
+  const { title, description, date, location, capacity, members_only } = req.body;
+  try {
+    const result = await pool.query(`
+      UPDATE events SET
+        title = $1, description = $2, date = $3,
+        location = $4, capacity = $5, members_only = $6
+      WHERE id = $7 RETURNING *
+    `, [title, description, date, location, capacity || null, members_only, req.params.id]);
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET RSVPs for any event
+router.get('/events/:id/rsvps', authenticate, authorize('super_admin'), async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT u.id, u.name, u.email, r.created_at
+      FROM users u
+      JOIN rsvps r ON u.id = r.user_id
+      WHERE r.event_id = $1
+      ORDER BY r.created_at DESC
+    `, [req.params.id]);
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;

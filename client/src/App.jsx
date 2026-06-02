@@ -13,6 +13,7 @@ import ClubAdminDashboard from './pages/clubadmin/ClubAdminDashboard'
 import ClubAdminLayout from './pages/clubadmin/ClubAdminLayout'
 import ClubAdminEvents from './pages/clubadmin/ClubAdminEvents'
 import ClubAdminMembers from './pages/clubadmin/ClubAdminMembers'
+import SuperAdminEvents from './pages/superadmin/SuperAdminEvents'
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
         <Route path="/club-admin" element={<ClubAdminDashboard />} />
         <Route path="/club-admin/events" element={<ClubAdminEvents />} />
         <Route path="/club-admin/members" element={<ClubAdminMembers />} />
+        <Route path="/admin/events" element={<SuperAdminEvents />} />
       </Routes>
     </BrowserRouter>
   )
