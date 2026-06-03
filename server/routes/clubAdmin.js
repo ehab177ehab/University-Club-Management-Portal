@@ -1,7 +1,7 @@
 const express = require('express');
 const pool = require('../config/db');
 const { authenticate, authorize } = require('../middleware/auth');
-
+const notify = require('../config/notify');
 const router = express.Router();
 
 // GET club admin's own club
@@ -97,6 +97,16 @@ router.patch('/my-club/events/:eventId', authenticate, authorize('club_admin'), 
         location = $4, capacity = $5, members_only = $6
       WHERE id = $7 RETURNING *
     `, [title, description, date, location, capacity || null, members_only, req.params.eventId]);
+
+    // Notify all RSVPd students
+    const rsvpUsers = await pool.query(
+      'SELECT user_id FROM rsvps WHERE event_id = $1',
+      [req.params.eventId]
+    );
+    for (const row of rsvpUsers.rows) {
+      await notify(row.user_id, 'event_update', `"${result.rows[0].title}" has been updated. Check the event page for details.`);
+    }
+
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
