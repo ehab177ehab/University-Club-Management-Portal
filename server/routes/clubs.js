@@ -136,6 +136,21 @@ if (isAdmin.rows.length > 0) {
 });
 
 
+router.patch('/:id', authenticate, authorize('super_admin'), async (req, res) => {
+  const { name, description, image_url } = req.body;
+  try {
+    const result = await pool.query(
+      'UPDATE clubs SET name = $1, description = $2, image_url = $3 WHERE id = $4 RETURNING *',
+      [name, description, image_url, req.params.id]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
 
 // DELETE leave a club
 router.delete('/:id/leave', authenticate, async (req, res) => {

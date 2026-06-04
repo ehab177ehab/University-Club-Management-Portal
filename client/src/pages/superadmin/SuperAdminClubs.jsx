@@ -11,6 +11,8 @@ export default function SuperAdminClubs() {
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
   const navigate = useNavigate()
+  const [editingClub, setEditingClub] = useState(null)
+  const [editClubForm, setEditClubForm] = useState({ name: '', description: '', image_url: '' })
 
   useEffect(() => {
     fetchClubs()
@@ -67,6 +69,24 @@ export default function SuperAdminClubs() {
     }
     setTimeout(() => { setMessage(''); setError('') }, 3000)
   }
+
+  const handleEditClub = async (e, clubId) => {
+  e.preventDefault()
+  const token = localStorage.getItem('token')
+  try {
+    const res = await fetch(`http://localhost:3000/api/clubs/${clubId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(editClubForm)
+    })
+    const data = await res.json()
+    if (!res.ok) { setError(data.error); return }
+    setMessage('Club updated!')
+    setEditingClub(null)
+    fetchClubs()
+  } catch { setError('Something went wrong') }
+  setTimeout(() => { setMessage(''); setError('') }, 3000)
+}
 
   return (
     <AdminLayout title="Manage Clubs">
@@ -137,20 +157,56 @@ export default function SuperAdminClubs() {
               <p className="text-gray-400 text-sm mt-0.5 line-clamp-1">{club.description}</p>
               <p className="text-gray-500 text-xs mt-1">👥 {club.member_count} members</p>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => window.open(`/clubs/${club.id}`, '_blank')}
-                className="text-sm px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition"
-              >
-                View
-              </button>
-              <button
-                onClick={() => handleDelete(club.id, club.name)}
-                className="text-sm px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg transition border border-red-500/30"
-              >
-                Delete
-              </button>
-            </div>
+
+            {editingClub === club.id && (
+<div className="bg-gray-800 border border-gray-700 rounded-2xl p-6 mt-2 w-full">
+    <h4 className="font-medium mb-4 text-white">Edit Club</h4>
+    <form onSubmit={(e) => handleEditClub(e, club.id)} className="flex flex-col gap-4">
+      <div>
+        <label className="block text-sm text-gray-300 mb-1">Name</label>
+        <input value={editClubForm.name} onChange={e => setEditClubForm({...editClubForm, name: e.target.value})} required className="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500" />
+      </div>
+      <div>
+        <label className="block text-sm text-gray-300 mb-1">Description</label>
+        <textarea value={editClubForm.description} onChange={e => setEditClubForm({...editClubForm, description: e.target.value})} rows={3} className="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 resize-none" />
+      </div>
+      <div>
+        <label className="block text-sm text-gray-300 mb-1">Image URL <span className="text-gray-500">(optional)</span></label>
+        <input value={editClubForm.image_url} onChange={e => setEditClubForm({...editClubForm, image_url: e.target.value})} placeholder="https://i.imgur.com/..." className="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500" />
+        {editClubForm.image_url && (
+          <img src={editClubForm.image_url} alt="preview" className="mt-2 h-24 w-full object-cover rounded-lg opacity-70" onError={e => e.target.style.display='none'} />
+        )}
+      </div>
+      <div className="flex gap-3">
+        <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-medium transition">Save Changes</button>
+        <button type="button" onClick={() => setEditingClub(null)} className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2.5 rounded-xl text-sm font-medium transition">Cancel</button>
+      </div>
+    </form>
+  </div>
+)}
+<div className="flex items-center gap-2">
+  <button
+    onClick={() => window.open(`/clubs/${club.id}`, '_blank')}
+    className="text-sm px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition"
+  >
+    View
+  </button>
+  <button
+    onClick={() => {
+      setEditingClub(editingClub === club.id ? null : club.id)
+      setEditClubForm({ name: club.name, description: club.description || '', image_url: club.image_url || '' })
+    }}
+    className="text-sm px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-lg transition border border-blue-500/30"
+  >
+    {editingClub === club.id ? 'Cancel' : 'Edit'}
+  </button>
+  <button
+    onClick={() => handleDelete(club.id, club.name)}
+    className="text-sm px-3 py-1.5 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg transition border border-red-500/30"
+  >
+    Delete
+  </button>
+</div>
           </div>
         ))}
       </div>
