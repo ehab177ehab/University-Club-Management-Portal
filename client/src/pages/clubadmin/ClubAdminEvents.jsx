@@ -186,13 +186,13 @@ export default function ClubAdminEvents() {
                   <h3 className="font-medium text-white">{event.title}</h3>
                   {event.members_only && <span className="text-xs bg-purple-600/20 text-purple-400 px-2 py-0.5 rounded-full border border-purple-500/30">Members only</span>}
                   <span className={`text-xs px-2 py-0.5 rounded-full border ${
-                    new Date(event.date) < new Date()
+                    (event.end_date ? new Date(event.end_date) : new Date(event.date)) < new Date()
                       ? 'bg-gray-500/10 border-gray-500/30 text-gray-400'
                       : event.status === 'upcoming'
                         ? 'bg-green-500/10 border-green-500/30 text-green-400'
                         : 'bg-gray-500/10 border-gray-500/30 text-gray-400'
                   }`}>
-                    {new Date(event.date) < new Date() ? 'past' : event.status}
+                    {(event.end_date ? new Date(event.end_date) : new Date(event.date)) < new Date() ? 'past' : event.status}
                   </span>
                 </div>
                 <div className="flex items-center gap-4 text-xs text-gray-500">

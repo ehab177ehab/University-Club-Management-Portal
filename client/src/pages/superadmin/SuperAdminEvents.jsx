@@ -73,8 +73,11 @@ export default function SuperAdminEvents() {
     } catch { console.error('Failed to fetch RSVPs') }
   }
 
-  // Returns true if event date is in the past
-  const isPast = (dateStr) => new Date(dateStr) < new Date()
+  // Returns true if event is fully past — uses end_date if available, otherwise start date
+  const isPast = (event) => {
+    const endDate = event.end_date ? new Date(event.end_date) : new Date(event.date)
+    return endDate < new Date()
+  }
 
   const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-US', {
     month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
@@ -95,20 +98,22 @@ export default function SuperAdminEvents() {
         ) : events.map(event => (
           <div key={event.id} className="flex flex-col">
 
-            {/* Event card row */}
-            <div className={`bg-gray-900 border rounded-2xl p-5 flex items-center justify-between ${isPast(event.date) ? 'border-gray-700 opacity-60' : 'border-gray-800'}`}>
+            {/* Event card row — grayed out if event is fully past */}
+            <div className={`bg-gray-900 border rounded-2xl p-5 flex items-center justify-between ${isPast(event) ? 'border-gray-700 opacity-60' : 'border-gray-800'}`}>
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-1">
-                  <h3 className={`font-medium ${isPast(event.date) ? 'text-gray-400' : 'text-white'}`}>{event.title}</h3>
+                  {/* Title — gray if past */}
+                  <h3 className={`font-medium ${isPast(event) ? 'text-gray-400' : 'text-white'}`}>{event.title}</h3>
                   <span className="text-xs text-blue-400 bg-blue-600/10 border border-blue-500/20 px-2 py-0.5 rounded-full">{event.club_name}</span>
                   {event.members_only && <span className="text-xs bg-purple-600/20 text-purple-400 px-2 py-0.5 rounded-full border border-purple-500/30">Members only</span>}
-                  <span className={`text-xs px-2 py-0.5 rounded-full border ${isPast(event.date) ? 'bg-gray-500/10 border-gray-500/30 text-gray-500' : 'bg-green-500/10 border-green-500/30 text-green-400'}`}>
-                    {isPast(event.date) ? 'past' : event.status}
+                  {/* Status badge — shows 'past' if fully over, otherwise shows event status */}
+                  <span className={`text-xs px-2 py-0.5 rounded-full border ${isPast(event) ? 'bg-gray-500/10 border-gray-500/30 text-gray-500' : 'bg-green-500/10 border-green-500/30 text-green-400'}`}>
+                    {isPast(event) ? 'past' : event.status}
                   </span>
                 </div>
                 <div className="flex items-center gap-4 text-xs text-gray-500">
                   <span>📅 {formatDate(event.date)}</span>
-                  {/* Show end date if multi-day event */}
+                  {/* Show end date arrow if multi-day event */}
                   {event.end_date && <span>→ {formatDate(event.end_date)}</span>}
                   <span>📍 {event.location}</span>
                   <span>👥 {event.rsvp_count} RSVPs {event.capacity ? `/ ${event.capacity}` : ''}</span>

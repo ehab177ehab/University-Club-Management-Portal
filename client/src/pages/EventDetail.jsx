@@ -164,11 +164,18 @@ export default function EventDetail() {
                   🏁 Ends: {formatDate(event.end_date)}
                 </p>
               )}
-              {event.end_date && (
+                 {event.end_date && (
+                <>
                 <p className="text-blue-400 text-xs mt-1">
-                  {Math.ceil((new Date(event.end_date) - new Date(event.date)) / (1000 * 60 * 60 * 24))} day event
-                </p>
-              )}
+                    {Math.ceil((new Date(event.end_date) - new Date(event.date)) / (1000 * 60 * 60 * 24))} day event
+                   </p>
+                   {new Date(event.end_date) > new Date() && (
+                  <p className="text-green-400 text-xs mt-0.5">
+                   {Math.ceil((new Date(event.end_date) - new Date()) / (1000 * 60 * 60 * 24))} days left
+                  </p>
+                   )}
+                 </>
+                )}
             </div>
 
             {/* Location card */}
