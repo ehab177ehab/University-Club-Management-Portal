@@ -85,10 +85,15 @@ export default function EventDetail() {
 
   if (!event) return <div className="min-h-screen bg-gray-950 flex items-center justify-center text-white">Loading...</div>
 
+  // Calculate spots left (null means unlimited)
   const spotsLeft = event.capacity ? event.capacity - rsvpCount : null
+
+  // Check if RSVP deadline has passed
+  const deadlinePassed = event.rsvp_deadline && new Date() > new Date(event.rsvp_deadline)
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
+      {/* Navbar */}
       <nav className="bg-gray-900 border-b border-gray-800 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-sm font-bold">U</div>
@@ -100,11 +105,18 @@ export default function EventDetail() {
           <button onClick={() => navigate('/events')} className="text-white text-sm font-medium border-b-2 border-blue-500 pb-0.5">Events</button>
         </div>
         <div className="flex items-center gap-4">
+          {/* Show Club Panel button for club admins */}
           {user?.role === 'club_admin' && (
-  <button onClick={() => navigate('/club-admin')} className="text-purple-400 hover:text-purple-300 text-sm transition">
-    Club Panel
-  </button>
-)}
+            <button onClick={() => navigate('/club-admin')} className="text-purple-400 hover:text-purple-300 text-sm transition">
+              Club Panel
+            </button>
+          )}
+          {/* Show Admin Panel button for super admins */}
+          {user?.role === 'super_admin' && (
+            <button onClick={() => navigate('/admin')} className="text-yellow-400 hover:text-yellow-300 text-sm transition">
+              Admin Panel
+            </button>
+          )}
           <span className="text-gray-400 text-sm">{user?.email}</span>
           <span className="bg-blue-600/20 text-blue-400 text-xs px-3 py-1 rounded-full border border-blue-500/30">{user?.role}</span>
           <button onClick={handleLogout} className="text-gray-400 hover:text-white text-sm transition">Logout</button>
@@ -117,6 +129,7 @@ export default function EventDetail() {
         </button>
 
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8">
+          {/* Event header */}
           <div className="flex items-start justify-between mb-6">
             <div>
               <div className="flex items-center gap-3 mb-2">
@@ -127,47 +140,100 @@ export default function EventDetail() {
               </div>
               <p className="text-blue-400 text-sm">Hosted by {event.club_name}</p>
             </div>
-            <span className={`text-xs px-3 py-1 rounded-full border ${event.status === 'upcoming' ? 'bg-green-500/10 border-green-500/30 text-green-400' : event.status === 'ongoing' ? 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400' : 'bg-gray-500/10 border-gray-500/30 text-gray-400'}`}>
+            <span className={`text-xs px-3 py-1 rounded-full border ${
+              event.status === 'upcoming' ? 'bg-green-500/10 border-green-500/30 text-green-400'
+              : event.status === 'ongoing' ? 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400'
+              : 'bg-gray-500/10 border-gray-500/30 text-gray-400'
+            }`}>
               {event.status}
             </span>
           </div>
 
+          {/* Event description */}
           <p className="text-gray-300 mb-8 leading-relaxed">{event.description}</p>
 
+          {/* Event details grid */}
           <div className="grid grid-cols-2 gap-4 mb-8">
+
+            {/* Date card — shows end date and duration if multi-day */}
             <div className="bg-gray-800 rounded-xl p-4">
               <p className="text-gray-400 text-xs mb-1">Date & Time</p>
               <p className="text-white text-sm font-medium">📅 {formatDate(event.date)}</p>
+              {event.end_date && (
+                <p className="text-white text-sm font-medium mt-1">
+                  🏁 Ends: {formatDate(event.end_date)}
+                </p>
+              )}
+              {event.end_date && (
+                <p className="text-blue-400 text-xs mt-1">
+                  {Math.ceil((new Date(event.end_date) - new Date(event.date)) / (1000 * 60 * 60 * 24))} day event
+                </p>
+              )}
             </div>
+
+            {/* Location card */}
             <div className="bg-gray-800 rounded-xl p-4">
               <p className="text-gray-400 text-xs mb-1">Location</p>
               <p className="text-white text-sm font-medium">📍 {event.location}</p>
             </div>
+
+            {/* Attendees card */}
             <div className="bg-gray-800 rounded-xl p-4">
               <p className="text-gray-400 text-xs mb-1">Attendees</p>
               <p className="text-white text-sm font-medium">👥 {rsvpCount} attending</p>
             </div>
+
+            {/* Capacity card */}
             <div className="bg-gray-800 rounded-xl p-4">
               <p className="text-gray-400 text-xs mb-1">Capacity</p>
               <p className="text-white text-sm font-medium">
                 {spotsLeft !== null ? `${spotsLeft} spots left` : 'Unlimited'}
               </p>
             </div>
+
+            {/* RSVP Deadline card — only shows if deadline is set */}
+            {event.rsvp_deadline && (
+              <div className="bg-gray-800 rounded-xl p-4 col-span-2">
+                <p className="text-gray-400 text-xs mb-1">RSVP Deadline</p>
+                <p className="text-white text-sm font-medium">
+                  {deadlinePassed
+                    ? '🔒 Registration closed'
+                    : `⏰ ${formatDate(event.rsvp_deadline)}`}
+                </p>
+              </div>
+            )}
+
           </div>
 
+          {/* Success / error message */}
           {message && (
-            <div className={`mb-6 px-4 py-3 rounded-lg text-sm ${message.includes('confirmed') ? 'bg-green-500/10 border border-green-500/30 text-green-400' : message.includes('cancelled') ? 'bg-yellow-500/10 border border-yellow-500/30 text-yellow-400' : 'bg-red-500/10 border border-red-500/30 text-red-400'}`}>
+            <div className={`mb-6 px-4 py-3 rounded-lg text-sm ${
+              message.includes('confirmed') ? 'bg-green-500/10 border border-green-500/30 text-green-400'
+              : message.includes('cancelled') ? 'bg-yellow-500/10 border border-yellow-500/30 text-yellow-400'
+              : 'bg-red-500/10 border border-red-500/30 text-red-400'
+            }`}>
               {message}
             </div>
           )}
 
+          {/* RSVP button — disabled if full, deadline passed, or already RSVPd and trying to re-RSVP */}
           <button
-            onClick={handleRSVP}
-            disabled={spotsLeft === 0 && !rsvpd}
-            className={`w-full py-3 rounded-xl font-medium transition ${rsvpd ? 'bg-gray-700 hover:bg-gray-600 text-gray-300' : spotsLeft === 0 ? 'bg-gray-800 text-gray-500 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+               onClick={handleRSVP}
+              disabled={(spotsLeft === 0 && !rsvpd) || (deadlinePassed && !rsvpd) || (deadlinePassed && rsvpd)}
+           className={`w-full py-3 rounded-xl font-medium transition ${
+           deadlinePassed ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+           : rsvpd ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+          : spotsLeft === 0 ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+          : 'bg-blue-600 hover:bg-blue-700 text-white'
+           }`}
           >
-            {rsvpd ? 'Cancel RSVP' : spotsLeft === 0 ? 'Event Full' : 'RSVP to this Event'}
-          </button>
+          {deadlinePassed && rsvpd ? 'Registered — Registration Closed'
+        : rsvpd ? 'Cancel RSVP'
+        : spotsLeft === 0 ? 'Event Full'
+        : deadlinePassed ? 'Registration Closed'
+         : 'RSVP to this Event'}
+        </button>
+
         </div>
       </div>
     </div>

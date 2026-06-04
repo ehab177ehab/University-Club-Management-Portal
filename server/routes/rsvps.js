@@ -62,6 +62,11 @@ router.post('/:eventId', authenticate, async (req, res) => {
 
     const e = event.rows[0];
 
+    // Check RSVP deadline
+if (e.rsvp_deadline && new Date() > new Date(e.rsvp_deadline)) {
+  return res.status(400).json({ error: 'Registration is closed for this event' });
+}
+
     // Check members only
 if (e.members_only) {
   const member = await pool.query(
@@ -112,12 +117,19 @@ router.delete('/:eventId', authenticate, async (req, res) => {
   const userId = req.user.id;
 
   try {
+    // Check if RSVP deadline has passed — if so, cancellation is not allowed
+    const event = await pool.query('SELECT rsvp_deadline FROM events WHERE id = $1', [eventId]);
+    if (event.rows.length > 0 && event.rows[0].rsvp_deadline) {
+      if (new Date() > new Date(event.rows[0].rsvp_deadline)) {
+        return res.status(400).json({ error: 'Registration is closed. You can no longer cancel your RSVP.' });
+      }
+    }
+
     await pool.query(
       'DELETE FROM rsvps WHERE event_id = $1 AND user_id = $2',
       [eventId, userId]
     );
     await notify(userId, 'rsvp_cancel', `You cancelled your RSVP for an event`);
-    
     res.json({ message: 'RSVP cancelled' });
   } catch (err) {
     console.error(err);

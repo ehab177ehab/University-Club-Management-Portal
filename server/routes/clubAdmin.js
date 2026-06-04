@@ -2,9 +2,10 @@ const express = require('express');
 const pool = require('../config/db');
 const { authenticate, authorize } = require('../middleware/auth');
 const notify = require('../config/notify');
+
 const router = express.Router();
 
-// GET club admin's own club
+// GET club admin's own club with member count
 router.get('/my-club', authenticate, authorize('club_admin'), async (req, res) => {
   try {
     const result = await pool.query(`
@@ -23,7 +24,7 @@ router.get('/my-club', authenticate, authorize('club_admin'), async (req, res) =
   }
 });
 
-// GET club's events
+// GET all events for the club admin's club
 router.get('/my-club/events', authenticate, authorize('club_admin'), async (req, res) => {
   try {
     const clubResult = await pool.query(
@@ -48,7 +49,7 @@ router.get('/my-club/events', authenticate, authorize('club_admin'), async (req,
   }
 });
 
-// GET RSVPs for an event
+// GET RSVPs for a specific event (must be before /:eventId routes)
 router.get('/my-club/events/:eventId/rsvps', authenticate, authorize('club_admin'), async (req, res) => {
   try {
     const result = await pool.query(`
@@ -65,9 +66,9 @@ router.get('/my-club/events/:eventId/rsvps', authenticate, authorize('club_admin
   }
 });
 
-// POST create event
+// POST create a new event for the club
 router.post('/my-club/events', authenticate, authorize('club_admin'), async (req, res) => {
-  const { title, description, date, location, capacity, members_only } = req.body;
+  const { title, description, date, end_date, rsvp_deadline, location, capacity, members_only } = req.body;
   try {
     const clubResult = await pool.query(
       'SELECT club_id FROM club_admins WHERE user_id = $1',
@@ -77,9 +78,9 @@ router.post('/my-club/events', authenticate, authorize('club_admin'), async (req
     const clubId = clubResult.rows[0].club_id;
 
     const result = await pool.query(`
-      INSERT INTO events (club_id, title, description, date, location, capacity, members_only, created_by)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *
-    `, [clubId, title, description, date, location, capacity || null, members_only || false, req.user.id]);
+      INSERT INTO events (club_id, title, description, date, end_date, rsvp_deadline, location, capacity, members_only, created_by)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *
+    `, [clubId, title, description, date, end_date || null, rsvp_deadline || null, location, capacity || null, members_only || false, req.user.id]);
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -87,18 +88,19 @@ router.post('/my-club/events', authenticate, authorize('club_admin'), async (req
     res.status(500).json({ error: 'Server error' });
   }
 });
-// PATCH update event
+
+// PATCH update an existing event and notify RSVPd students
 router.patch('/my-club/events/:eventId', authenticate, authorize('club_admin'), async (req, res) => {
-  const { title, description, date, location, capacity, members_only } = req.body;
+  const { title, description, date, end_date, rsvp_deadline, location, capacity, members_only } = req.body;
   try {
     const result = await pool.query(`
       UPDATE events SET
-        title = $1, description = $2, date = $3,
-        location = $4, capacity = $5, members_only = $6
-      WHERE id = $7 RETURNING *
-    `, [title, description, date, location, capacity || null, members_only, req.params.eventId]);
+        title = $1, description = $2, date = $3, end_date = $4,
+        rsvp_deadline = $5, location = $6, capacity = $7, members_only = $8
+      WHERE id = $9 RETURNING *
+    `, [title, description, date, end_date || null, rsvp_deadline || null, location, capacity || null, members_only, req.params.eventId]);
 
-    // Notify all RSVPd students
+    // Notify all students who RSVPd to this event about the update
     const rsvpUsers = await pool.query(
       'SELECT user_id FROM rsvps WHERE event_id = $1',
       [req.params.eventId]
@@ -114,7 +116,7 @@ router.patch('/my-club/events/:eventId', authenticate, authorize('club_admin'), 
   }
 });
 
-// DELETE event
+// DELETE an event
 router.delete('/my-club/events/:eventId', authenticate, authorize('club_admin'), async (req, res) => {
   try {
     await pool.query('DELETE FROM events WHERE id = $1', [req.params.eventId]);
@@ -125,7 +127,7 @@ router.delete('/my-club/events/:eventId', authenticate, authorize('club_admin'),
   }
 });
 
-// GET club members
+// GET all members of the club admin's club
 router.get('/my-club/members', authenticate, authorize('club_admin'), async (req, res) => {
   try {
     const clubResult = await pool.query(
@@ -149,9 +151,7 @@ router.get('/my-club/members', authenticate, authorize('club_admin'), async (req
   }
 });
 
-
-
-// DELETE remove member
+// DELETE remove a member from the club (cannot remove self)
 router.delete('/my-club/members/:userId', authenticate, authorize('club_admin'), async (req, res) => {
   const clubResult = await pool.query(
     'SELECT club_id FROM club_admins WHERE user_id = $1',
@@ -175,4 +175,5 @@ router.delete('/my-club/members/:userId', authenticate, authorize('club_admin'),
     res.status(500).json({ error: 'Server error' });
   }
 });
+
 module.exports = router;

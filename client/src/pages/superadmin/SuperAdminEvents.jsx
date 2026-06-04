@@ -44,7 +44,13 @@ export default function SuperAdminEvents() {
       const res = await fetch(`http://localhost:3000/api/admin/events/${editingEvent}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ ...editForm, capacity: editForm.capacity ? parseInt(editForm.capacity) : null })
+        // Include end_date and rsvp_deadline in the update body
+        body: JSON.stringify({
+          ...editForm,
+          capacity: editForm.capacity ? parseInt(editForm.capacity) : null,
+          end_date: editForm.end_date || null,
+          rsvp_deadline: editForm.rsvp_deadline || null
+        })
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error); return }
@@ -67,6 +73,7 @@ export default function SuperAdminEvents() {
     } catch { console.error('Failed to fetch RSVPs') }
   }
 
+  // Returns true if event date is in the past
   const isPast = (dateStr) => new Date(dateStr) < new Date()
 
   const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-US', {
@@ -87,6 +94,8 @@ export default function SuperAdminEvents() {
           </div>
         ) : events.map(event => (
           <div key={event.id} className="flex flex-col">
+
+            {/* Event card row */}
             <div className={`bg-gray-900 border rounded-2xl p-5 flex items-center justify-between ${isPast(event.date) ? 'border-gray-700 opacity-60' : 'border-gray-800'}`}>
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-1">
@@ -99,6 +108,8 @@ export default function SuperAdminEvents() {
                 </div>
                 <div className="flex items-center gap-4 text-xs text-gray-500">
                   <span>📅 {formatDate(event.date)}</span>
+                  {/* Show end date if multi-day event */}
+                  {event.end_date && <span>→ {formatDate(event.end_date)}</span>}
                   <span>📍 {event.location}</span>
                   <span>👥 {event.rsvp_count} RSVPs {event.capacity ? `/ ${event.capacity}` : ''}</span>
                 </div>
@@ -113,7 +124,17 @@ export default function SuperAdminEvents() {
                 <button
                   onClick={() => {
                     setEditingEvent(editingEvent === event.id ? null : event.id)
-                    setEditForm({ title: event.title, description: event.description, date: new Date(event.date).toISOString().slice(0, 16), location: event.location, capacity: event.capacity || '', members_only: event.members_only })
+                    // Pre-fill edit form with current event data including rsvp_deadline
+                    setEditForm({
+                      title: event.title,
+                      description: event.description,
+                      date: new Date(event.date).toISOString().slice(0, 16),
+                      end_date: event.end_date ? new Date(event.end_date).toISOString().slice(0, 16) : '',
+                      rsvp_deadline: event.rsvp_deadline ? new Date(event.rsvp_deadline).toISOString().slice(0, 16) : '',
+                      location: event.location,
+                      capacity: event.capacity || '',
+                      members_only: event.members_only
+                    })
                   }}
                   className="text-sm bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 px-3 py-1.5 rounded-lg border border-blue-500/30 transition"
                 >
@@ -128,6 +149,7 @@ export default function SuperAdminEvents() {
               </div>
             </div>
 
+            {/* Edit form — shown below the card when Edit is clicked */}
             {editingEvent === event.id && (
               <div className="bg-gray-800 border border-gray-700 rounded-2xl p-5 mt-2">
                 <h4 className="font-medium mb-4 text-white">Edit Event</h4>
@@ -141,8 +163,12 @@ export default function SuperAdminEvents() {
                     <textarea value={editForm.description} onChange={e => setEditForm({...editForm, description: e.target.value})} rows={2} className="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 resize-none" />
                   </div>
                   <div>
-                    <label className="block text-sm text-gray-300 mb-1">Date & Time</label>
+                    <label className="block text-sm text-gray-300 mb-1">Start Date & Time</label>
                     <input type="datetime-local" value={editForm.date} onChange={e => setEditForm({...editForm, date: e.target.value})} required className="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500" />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-300 mb-1">End Date & Time <span className="text-gray-500">(leave empty for single day)</span></label>
+                    <input type="datetime-local" value={editForm.end_date || ''} onChange={e => setEditForm({...editForm, end_date: e.target.value})} min={editForm.date || ''} className="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500" />
                   </div>
                   <div>
                     <label className="block text-sm text-gray-300 mb-1">Location</label>
@@ -151,6 +177,11 @@ export default function SuperAdminEvents() {
                   <div>
                     <label className="block text-sm text-gray-300 mb-1">Capacity</label>
                     <input type="number" value={editForm.capacity} onChange={e => setEditForm({...editForm, capacity: e.target.value})} className="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500" />
+                  </div>
+                  {/* RSVP Deadline field — optional, must be before event start date */}
+                  <div>
+                    <label className="block text-sm text-gray-300 mb-1">RSVP Deadline <span className="text-gray-500">(optional)</span></label>
+                    <input type="datetime-local" value={editForm.rsvp_deadline || ''} onChange={e => setEditForm({...editForm, rsvp_deadline: e.target.value})} max={editForm.date || ''} className="w-full bg-gray-900 border border-gray-700 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500" />
                   </div>
                   <div className="flex items-center gap-3 pt-6">
                     <input type="checkbox" checked={editForm.members_only} onChange={e => setEditForm({...editForm, members_only: e.target.checked})} className="w-4 h-4 accent-blue-600" />
@@ -164,6 +195,7 @@ export default function SuperAdminEvents() {
               </div>
             )}
 
+            {/* RSVPs panel — shown below the card when RSVPs button is clicked */}
             {viewingRsvps === event.id && (
               <div className="bg-gray-800 border border-gray-700 rounded-2xl p-5 mt-2">
                 <h4 className="font-medium mb-3 text-white">RSVPs — {event.title}</h4>
@@ -193,6 +225,7 @@ export default function SuperAdminEvents() {
                 )}
               </div>
             )}
+
           </div>
         ))}
       </div>

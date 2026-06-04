@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
       SELECT e.*, c.name as club_name, c.image_url as club_image
       FROM events e
       JOIN clubs c ON e.club_id = c.id
-      WHERE e.status = 'upcoming' AND e.date > NOW()
+      WHERE e.status = 'upcoming' AND (e.end_date > NOW() OR (e.end_date IS NULL AND e.date > NOW()))
     `;
     const params = [];
     if (club_id) {

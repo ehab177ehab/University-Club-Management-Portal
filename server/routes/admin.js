@@ -25,16 +25,16 @@ router.get('/stats', authenticate, authorize('super_admin'), async (req, res) =>
   }
 });
 
-// GET all users
+// GET all users with their club admin assignment if any
 router.get('/users', authenticate, authorize('super_admin'), async (req, res) => {
   try {
-    const result = await pool.query(
-      `SELECT u.id, u.name, u.email, u.role, u.created_at,
-     c.name as club_name, c.id as club_id
-     FROM users u
-     LEFT JOIN club_admins ca ON u.id = ca.user_id
-     LEFT JOIN clubs c ON ca.club_id = c.id
-     ORDER BY u.created_at DESC
+    const result = await pool.query(`
+      SELECT u.id, u.name, u.email, u.role, u.created_at,
+        c.name as club_name, c.id as club_id
+      FROM users u
+      LEFT JOIN club_admins ca ON u.id = ca.user_id
+      LEFT JOIN clubs c ON ca.club_id = c.id
+      ORDER BY u.created_at DESC
     `);
     res.json(result.rows);
   } catch (err) {
@@ -43,45 +43,55 @@ router.get('/users', authenticate, authorize('super_admin'), async (req, res) =>
   }
 });
 
-// PATCH promote user to club_admin
+// PATCH promote user to club_admin for a specific club
 router.patch('/users/:id/promote', authenticate, authorize('super_admin'), async (req, res) => {
   const { club_id } = req.body;
   const userId = req.params.id;
   try {
+    // Check if club already has an admin
     const existing = await pool.query(
-  'SELECT id FROM club_admins WHERE club_id = $1',
-  [club_id]
-     );
-if (existing.rows.length > 0) {
-  return res.status(400).json({ error: 'This club already has an admin. Remove the current admin first.' });
-     }
+      'SELECT id FROM club_admins WHERE club_id = $1',
+      [club_id]
+    );
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ error: 'This club already has an admin. Remove the current admin first.' });
+    }
+
+    // Update user role to club_admin
     await pool.query(
       'UPDATE users SET role = $1 WHERE id = $2',
       ['club_admin', userId]
     );
+
+    // Add to club_admins table
     await pool.query(
       'INSERT INTO club_admins (club_id, user_id) VALUES ($1, $2) ON CONFLICT (club_id, user_id) DO NOTHING',
       [club_id, userId]
     );
+
+    // Auto-add to club_members so they can RSVP to members-only events
+    await pool.query(
+      'INSERT INTO club_members (club_id, user_id) VALUES ($1, $2) ON CONFLICT (club_id, user_id) DO NOTHING',
+      [club_id, userId]
+    );
+
     res.json({ message: 'User promoted to club admin' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
-  await pool.query(
-  'INSERT INTO club_members (club_id, user_id) VALUES ($1, $2) ON CONFLICT (club_id, user_id) DO NOTHING',
-  [club_id, userId]
-);
 });
 
 // PATCH demote club_admin back to student
 router.patch('/users/:id/demote', authenticate, authorize('super_admin'), async (req, res) => {
   const userId = req.params.id;
   try {
+    // Revert role to student
     await pool.query(
       'UPDATE users SET role = $1 WHERE id = $2',
       ['student', userId]
     );
+    // Remove from club_admins table
     await pool.query(
       'DELETE FROM club_admins WHERE user_id = $1',
       [userId]
@@ -93,7 +103,7 @@ router.patch('/users/:id/demote', authenticate, authorize('super_admin'), async 
   }
 });
 
-// DELETE user
+// DELETE user permanently
 router.delete('/users/:id', authenticate, authorize('super_admin'), async (req, res) => {
   try {
     await pool.query('DELETE FROM users WHERE id = $1', [req.params.id]);
@@ -104,7 +114,7 @@ router.delete('/users/:id', authenticate, authorize('super_admin'), async (req, 
   }
 });
 
-// GET all events
+// GET all events across all clubs with RSVP count
 router.get('/events', authenticate, authorize('super_admin'), async (req, res) => {
   try {
     const result = await pool.query(`
@@ -122,16 +132,16 @@ router.get('/events', authenticate, authorize('super_admin'), async (req, res) =
   }
 });
 
-// PATCH edit any event
+// PATCH edit any event (super admin can edit all fields including end_date and rsvp_deadline)
 router.patch('/events/:id', authenticate, authorize('super_admin'), async (req, res) => {
-  const { title, description, date, location, capacity, members_only } = req.body;
+  const { title, description, date, end_date, rsvp_deadline, location, capacity, members_only } = req.body;
   try {
     const result = await pool.query(`
       UPDATE events SET
-        title = $1, description = $2, date = $3,
-        location = $4, capacity = $5, members_only = $6
-      WHERE id = $7 RETURNING *
-    `, [title, description, date, location, capacity || null, members_only, req.params.id]);
+        title = $1, description = $2, date = $3, end_date = $4,
+        rsvp_deadline = $5, location = $6, capacity = $7, members_only = $8
+      WHERE id = $9 RETURNING *
+    `, [title, description, date, end_date || null, rsvp_deadline || null, location, capacity || null, members_only, req.params.id]);
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);
@@ -139,7 +149,7 @@ router.patch('/events/:id', authenticate, authorize('super_admin'), async (req, 
   }
 });
 
-// GET RSVPs for any event
+// GET RSVPs for any specific event
 router.get('/events/:id/rsvps', authenticate, authorize('super_admin'), async (req, res) => {
   try {
     const result = await pool.query(`
