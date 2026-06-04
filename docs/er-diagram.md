@@ -37,6 +37,7 @@ erDiagram
     string title
     string description
     timestamp date
+    timestamp end_date
     string location
     int capacity
     boolean members_only

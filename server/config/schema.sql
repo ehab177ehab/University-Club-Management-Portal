@@ -38,6 +38,7 @@ CREATE TABLE events (
   title VARCHAR(150) NOT NULL,
   description TEXT,
   date TIMESTAMP NOT NULL,
+  end_date TIMESTAMP,
   location VARCHAR(255),
   capacity INTEGER,
   members_only BOOLEAN DEFAULT false,
