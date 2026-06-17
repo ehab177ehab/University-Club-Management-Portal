@@ -13,6 +13,7 @@ export default function SuperAdminClubs() {
   const navigate = useNavigate()
   const [editingClub, setEditingClub] = useState(null)
   const [editClubForm, setEditClubForm] = useState({ name: '', description: '', image_url: '' })
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     fetchClubs()
@@ -101,7 +102,17 @@ export default function SuperAdminClubs() {
       </div>
 
       {message && <div className="mb-4 px-4 py-3 rounded-lg text-sm bg-green-500/10 border border-green-500/30 text-green-400">{message}</div>}
+
       {error && <div className="mb-4 px-4 py-3 rounded-lg text-sm bg-red-500/10 border border-red-500/30 text-red-400">{error}</div>}
+
+            <div className="mb-4">
+            <input
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search clubs by name..."
+             className="w-full bg-gray-900 border border-gray-800 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500"
+             /> 
+           </div>
 
       {showForm && (
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-6">
@@ -147,7 +158,7 @@ export default function SuperAdminClubs() {
       )}
 
       <div className="flex flex-col gap-3">
-        {clubs.map(club => (
+        {clubs.filter(club => club.name.toLowerCase().includes(searchQuery.toLowerCase())).map(club => (
           <div key={club.id} className="bg-gray-900 border border-gray-800 rounded-2xl p-5 flex items-center gap-4">
             {club.image_url && (
               <img src={club.image_url} alt={club.name} className="w-14 h-14 rounded-xl object-cover flex-shrink-0" />

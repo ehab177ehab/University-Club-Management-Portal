@@ -6,6 +6,7 @@ export default function Events() {
   const [rsvpdEvents, setRsvpdEvents] = useState(new Set())
   const [message, setMessage] = useState('')
   const [user, setUser] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -99,10 +100,18 @@ export default function Events() {
 </nav>
 
       <div className="max-w-6xl mx-auto px-6 py-10">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold">All Events</h1>
+        <div className="flex items-center justify-between mb-8">
+         <div>
+            <h1 className="text-2xl font-bold">All Events</h1>
           <p className="text-gray-400 mt-1">Browse all upcoming campus events</p>
-        </div>
+          </div>
+           <input
+             value={searchQuery}
+             onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search events..."
+             className="w-64 bg-gray-900 border border-gray-800 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500"
+            />
+          </div>
 
         {message && (
           <div className={`mb-6 px-4 py-3 rounded-lg text-sm ${message.includes('confirmed') ? 'bg-green-500/10 border border-green-500/30 text-green-400' : message.includes('cancelled') ? 'bg-yellow-500/10 border border-yellow-500/30 text-yellow-400' : 'bg-red-500/10 border border-red-500/30 text-red-400'}`}>
@@ -110,13 +119,13 @@ export default function Events() {
           </div>
         )}
 
-        {events.length === 0 ? (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
-            <p className="text-gray-500">No events yet. Check back soon!</p>
-          </div>
-        ) : (
-          <div className="grid gap-4">
-            {events.map(event => (
+        {events.filter(event => event.title.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 ? (
+               <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
+                <p className="text-gray-500">{events.length === 0 ? 'No events yet. Check back soon!' : 'No events match your search.'}</p>
+             </div>
+           ) : (
+            <div className="grid gap-4">
+               {events.filter(event => event.title.toLowerCase().includes(searchQuery.toLowerCase())).map(event => (
               <div key={event.id} onClick={() => navigate(`/events/${event.id}`)} className="bg-gray-900 border border-gray-800 rounded-xl p-6 flex items-start justify-between hover:border-gray-700 transition cursor-pointer">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">

@@ -20,6 +20,10 @@ export default function ClubAdminEvents() {
   const [viewingRsvps, setViewingRsvps] = useState(null)
   const [rsvps, setRsvps] = useState([])
 
+
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+
   useEffect(() => { fetchEvents() }, [])
 
   const fetchEvents = async () => {
@@ -122,14 +126,33 @@ const getEventState = (event) => {
   return (
     <ClubAdminLayout title="Events">
       <div className="flex items-center justify-between mb-6">
-        <p className="text-gray-400 text-sm">{events.length} total events</p>
+      <p className="text-gray-400 text-sm">{events.length} total events</p>
         <button
-          onClick={() => setShowForm(!showForm)}
-          className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition"
-        >
+        onClick={() => setShowForm(!showForm)}
+        className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition"
+     >
           {showForm ? 'Cancel' : '+ Create Event'}
-        </button>
+    </button>
       </div>
+
+        <div className="mb-4 flex gap-3">
+        <input
+        value={searchQuery}
+        onChange={e => setSearchQuery(e.target.value)}
+        placeholder="Search events..."
+        className="flex-1 bg-gray-900 border border-gray-800 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-purple-500"
+       />
+       <select
+       value={statusFilter}
+       onChange={e => setStatusFilter(e.target.value)}
+       className="bg-gray-900 border border-gray-800 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-purple-500"
+     >
+       <option value="all">All Events</option>
+       <option value="upcoming">Upcoming</option>
+       <option value="ongoing">Ongoing</option>
+      <option value="past">Past</option>
+     </select>
+    </div>
 
       {message && <div className="mb-4 px-4 py-3 rounded-lg text-sm bg-green-500/10 border border-green-500/30 text-green-400">{message}</div>}
       {error && <div className="mb-4 px-4 py-3 rounded-lg text-sm bg-red-500/10 border border-red-500/30 text-red-400">{error}</div>}
@@ -181,11 +204,17 @@ const getEventState = (event) => {
       )}
 
       <div className="flex flex-col gap-3">
-        {events.length === 0 ? (
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 text-center">
-            <p className="text-gray-500">No events yet. Create your first event!</p>
-          </div>
-        ) : events.map(event => (
+        {events.filter(event =>
+          event.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
+            (statusFilter === 'all' || getEventState(event) === statusFilter)
+         ).length === 0 ? (
+               <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 text-center">
+                <p className="text-gray-500">{events.length === 0 ? 'No events yet. Create your first event!' : 'No events match your filters.'}</p>
+             </div>
+            ) : events.filter(event =>
+            event.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
+            (statusFilter === 'all' || getEventState(event) === statusFilter)
+           ).map(event => (
           <div key={event.id} className="flex flex-col">
 
             {/* Event card row */}

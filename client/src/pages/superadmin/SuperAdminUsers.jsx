@@ -5,6 +5,7 @@ export default function SuperAdminUsers() {
   const [users, setUsers] = useState([])
   const [clubs, setClubs] = useState([])
   const [search, setSearch] = useState('')
+  const [roleFilter, setRoleFilter] = useState('all')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
 
@@ -83,8 +84,9 @@ export default function SuperAdminUsers() {
   }
 
   const filtered = users.filter(u =>
-    u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase())
+  (u.name.toLowerCase().includes(search.toLowerCase()) ||
+   u.email.toLowerCase().includes(search.toLowerCase())) &&
+   (roleFilter === 'all' || u.role === roleFilter)
   )
 
   const roleColor = (role) => {
@@ -95,13 +97,23 @@ export default function SuperAdminUsers() {
 
   return (
     <AdminLayout title="Manage Users">
-      <div className="mb-6">
+       <div className="mb-6 flex gap-3">
         <input
           value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="Search by name or email..."
-          className="w-full max-w-md bg-gray-900 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500"
-        />
+           onChange={e => setSearch(e.target.value)}
+            placeholder="Search by name or email..."
+            className="flex-1 max-w-md bg-gray-900 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500"
+             />
+          <select
+           value={roleFilter}
+        onChange={e => setRoleFilter(e.target.value)}
+          className="bg-gray-900 border border-gray-700 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500"
+          >
+         <option value="all">All roles</option>
+         <option value="student">Students</option>
+         <option value="club_admin">Club Admins</option>
+         <option value="super_admin">Super Admins</option>
+        </select>
       </div>
 
       {message && <div className="mb-4 px-4 py-3 rounded-lg text-sm bg-green-500/10 border border-green-500/30 text-green-400">{message}</div>}

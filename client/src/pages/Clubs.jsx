@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 export default function Clubs() {
   const [clubs, setClubs] = useState([])
   const [user, setUser] = useState(null)
+  const [searchQuery, setSearchQuery] = useState('')
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -58,17 +59,23 @@ export default function Clubs() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold">Campus Clubs</h1>
-            <p className="text-gray-400 mt-1">Browse and join clubs that interest you</p>
+           <p className="text-gray-400 mt-1">Browse and join clubs that interest you</p>
           </div>
-        </div>
+         <input
+           value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+           placeholder="Search clubs..."
+           className="w-64 bg-gray-900 border border-gray-800 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500"
+           />
+         </div>
 
-        {clubs.length === 0 ? (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
-            <p className="text-gray-500">No clubs yet. Check back soon!</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {clubs.map(club => (
+        {clubs.filter(club => club.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 ? (
+            <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
+              <p className="text-gray-500">{clubs.length === 0 ? 'No clubs yet. Check back soon!' : 'No clubs match your search.'}</p>
+            </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {clubs.filter(club => club.name.toLowerCase().includes(searchQuery.toLowerCase())).map(club => (
               <div
                 key={club.id}
                 onClick={() => navigate(`/clubs/${club.id}`)}

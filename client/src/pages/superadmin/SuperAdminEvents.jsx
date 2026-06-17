@@ -9,6 +9,9 @@ export default function SuperAdminEvents() {
   const [editForm, setEditForm] = useState({})
   const [viewingRsvps, setViewingRsvps] = useState(null)
   const [rsvps, setRsvps] = useState([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [clubFilter, setClubFilter] = useState('all')
 
   useEffect(() => { fetchEvents() }, [])
 
@@ -96,15 +99,52 @@ export default function SuperAdminEvents() {
     <AdminLayout title="All Events">
       <p className="text-gray-400 text-sm mb-6">{events.length} total events across all clubs</p>
 
+        <div className="mb-4 flex gap-3">
+     <input
+      value={searchQuery}
+      onChange={e => setSearchQuery(e.target.value)}
+      placeholder="Search events or clubs..."
+      className="flex-1 bg-gray-900 border border-gray-800 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500"
+      />
+    <select
+       value={statusFilter}
+       onChange={e => setStatusFilter(e.target.value)}
+        className="bg-gray-900 border border-gray-800 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500"
+        >
+        <option value="all">All Events</option>
+        <option value="upcoming">Upcoming</option>
+        <option value="ongoing">Ongoing</option>
+        <option value="past">Past</option>
+      </select>
+       <select
+       value={clubFilter}
+       onChange={e => setClubFilter(e.target.value)}
+       className="bg-gray-900 border border-gray-800 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500"
+      >
+        <option value="all">All clubs</option>
+         {[...new Set(events.map(e => e.club_name))].map(name => (
+        <option key={name} value={name}>{name}</option>
+         ))}
+      </select>
+    </div>
+
       {message && <div className="mb-4 px-4 py-3 rounded-lg text-sm bg-green-500/10 border border-green-500/30 text-green-400">{message}</div>}
       {error && <div className="mb-4 px-4 py-3 rounded-lg text-sm bg-red-500/10 border border-red-500/30 text-red-400">{error}</div>}
 
       <div className="flex flex-col gap-3">
-        {events.length === 0 ? (
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 text-center">
-            <p className="text-gray-500">No events yet.</p>
-          </div>
-        ) : events.map(event => (
+        {events.filter(event =>
+        (event.title.toLowerCase().includes(searchQuery.toLowerCase()) || event.club_name.toLowerCase().includes(searchQuery.toLowerCase())) &&
+        (statusFilter === 'all' || getEventState(event) === statusFilter) &&
+        (clubFilter === 'all' || event.club_name === clubFilter)
+          ).length === 0 ? (
+            <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8 text-center">
+             <p className="text-gray-500">No events match your filters.</p>
+           </div>
+          ) : events.filter(event =>
+         (event.title.toLowerCase().includes(searchQuery.toLowerCase()) || event.club_name.toLowerCase().includes(searchQuery.toLowerCase())) &&
+          (statusFilter === 'all' || getEventState(event) === statusFilter) &&
+          (clubFilter === 'all' || event.club_name === clubFilter)
+         ).map(event => (
           <div key={event.id} className="flex flex-col">
 
             {/* Event card row — grayed out if event is fully past */}
@@ -112,7 +152,7 @@ export default function SuperAdminEvents() {
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-1">
                   {/* Title — gray if past */}
-                  <h3 className={`font-medium ${isPast(event) ? 'text-gray-400' : 'text-white'}`}>{event.title}</h3>
+                  <h3 className={`font-medium ${getEventState(event) === 'past' ? 'text-gray-400' : 'text-white'}`}>{event.title}</h3>
                   <span className="text-xs text-blue-400 bg-blue-600/10 border border-blue-500/20 px-2 py-0.5 rounded-full">{event.club_name}</span>
                   {event.members_only && <span className="text-xs bg-purple-600/20 text-purple-400 px-2 py-0.5 rounded-full border border-purple-500/30">Members only</span>}
                   {/* Status badge — shows 'past' if fully over, otherwise shows event status */}
