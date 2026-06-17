@@ -1,6 +1,7 @@
 const express = require('express');
 const pool = require('../config/db');
 const { authenticate, authorize } = require('../middleware/auth');
+const notify = require('../config/notify');
 
 const router = express.Router();
 
@@ -142,6 +143,13 @@ router.patch('/events/:id', authenticate, authorize('super_admin'), async (req, 
         rsvp_deadline = $5, location = $6, capacity = $7, members_only = $8
       WHERE id = $9 RETURNING *
     `, [title, description, date, end_date || null, rsvp_deadline || null, location, capacity || null, members_only, req.params.id]);
+
+    // Notify all students who RSVPd to this event that it was updated
+    const rsvpdUsers = await pool.query('SELECT user_id FROM rsvps WHERE event_id = $1', [req.params.id]);
+    for (const row of rsvpdUsers.rows) {
+      await notify(row.user_id, 'event_update', `"${title}" has been updated. Check the event page for details.`);
+    }
+
     res.json(result.rows[0]);
   } catch (err) {
     console.error(err);

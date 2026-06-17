@@ -88,6 +88,12 @@ export default function Dashboard() {
     })
   }
 
+
+const isUpcomingOrOngoing = (event) => {
+  const end = event.end_date ? new Date(event.end_date) : new Date(event.date)
+  return end >= new Date()
+}
+
   const formatTime = (dateStr) => new Date(dateStr).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
   const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
   const formatTimeAgo = (dateStr) => {
@@ -183,12 +189,12 @@ export default function Dashboard() {
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-white">My RSVPd Events</h3>
-                <span className="bg-blue-600/20 text-blue-400 text-xs px-2 py-0.5 rounded-full border border-blue-500/30">{rsvpdEvents.length}</span>
+                <span className="bg-blue-600/20 text-blue-400 text-xs px-2 py-0.5 rounded-full border border-blue-500/30">{rsvpdEvents.filter(isUpcomingOrOngoing).length}</span>
               </div>
               <div className="flex flex-col gap-2 max-h-48 overflow-y-auto">
-                {rsvpdEvents.length === 0 ? (
-                  <p className="text-gray-500 text-sm">No RSVPs yet. <button onClick={() => navigate('/events')} className="text-blue-400 hover:text-blue-300">Browse events →</button></p>
-                ) : rsvpdEvents.map(event => (
+                {rsvpdEvents.filter(isUpcomingOrOngoing).length === 0 ? (
+                    <p className="text-gray-500 text-sm">No RSVPs yet. <button onClick={() => navigate('/events')} className="text-blue-400 hover:text-blue-300">Browse events →</button></p>
+                      ) : rsvpdEvents.filter(isUpcomingOrOngoing).map(event => (
                   <div key={event.id} onClick={() => navigate(`/events/${event.id}`)} className="flex items-center justify-between p-3 bg-gray-800 rounded-xl hover:bg-gray-750 cursor-pointer transition border border-gray-700 hover:border-gray-600">
                     <div>
                       <p className="text-sm font-medium text-white">{event.title}</p>

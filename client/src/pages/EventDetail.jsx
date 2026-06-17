@@ -108,11 +108,16 @@ export default function EventDetail() {
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-sm font-bold">U</div>
           <span className="font-semibold text-white">University Club Portal</span>
         </div>
-        <div className="flex items-center gap-10">
-          <button onClick={() => navigate('/dashboard')} className="text-gray-400 hover:text-white text-sm font-medium transition">Dashboard</button>
-          <button onClick={() => navigate('/clubs')} className="text-gray-400 hover:text-white text-sm font-medium transition">Clubs</button>
-          <button onClick={() => navigate('/events')} className="text-white text-sm font-medium border-b-2 border-blue-500 pb-0.5">Events</button>
-        </div>
+        {user?.role !== 'super_admin' && (
+              <div className="flex items-center gap-10">
+                <button onClick={() => navigate('/dashboard')} className="text-gray-400 hover:text-white text-sm font-medium transition">Dashboard</button>
+                <button onClick={() => navigate('/clubs')} className="text-gray-400 hover:text-white text-sm font-medium transition">Clubs</button>
+                <button onClick={() => navigate('/events')} className="text-white text-sm font-medium border-b-2 border-blue-500 pb-0.5">Events</button>
+              </div>
+              )}
+                {user?.role === 'super_admin' && (
+                 <span className="text-yellow-400 text-sm font-medium">Viewing as Super Admin</span>
+              )}
         <div className="flex items-center gap-4">
           {/* Show Club Panel button for club admins */}
           {user?.role === 'club_admin' && (
@@ -120,12 +125,12 @@ export default function EventDetail() {
               Club Panel
             </button>
           )}
-          {/* Show Admin Panel button for super admins */}
-          {user?.role === 'super_admin' && (
-            <button onClick={() => navigate('/admin')} className="text-yellow-400 hover:text-yellow-300 text-sm transition">
-              Admin Panel
-            </button>
-          )}
+          {/* Close this preview tab for super admins instead of navigating */}
+              {user?.role === 'super_admin' && (
+                <button onClick={() => window.close()} className="text-yellow-400 hover:text-yellow-300 text-sm transition">
+                Close Tab
+             </button>
+                 )}
           <span className="text-gray-400 text-sm">{user?.email}</span>
           <span className="bg-blue-600/20 text-blue-400 text-xs px-3 py-1 rounded-full border border-blue-500/30">{user?.role}</span>
           <button onClick={handleLogout} className="text-gray-400 hover:text-white text-sm transition">Logout</button>
@@ -133,9 +138,9 @@ export default function EventDetail() {
       </nav>
 
       <div className="max-w-3xl mx-auto px-6 py-10">
-        <button onClick={() => navigate('/events')} className="text-gray-400 hover:text-white text-sm mb-6 flex items-center gap-2 transition">
-          ← Back to Events
-        </button>
+          <button onClick={() => user?.role === 'super_admin' ? window.close() : navigate('/events')} className="text-gray-400 hover:text-white text-sm mb-6 flex items-center gap-2 transition">
+            {user?.role === 'super_admin' ? '← Close Tab' : '← Back to Events'}
+</button>
 
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-8">
           {/* Event header */}
@@ -233,22 +238,24 @@ export default function EventDetail() {
           )}
 
           {/* RSVP button — disabled if full, deadline passed, or already RSVPd and trying to re-RSVP */}
-          <button
-               onClick={handleRSVP}
-              disabled={(spotsLeft === 0 && !rsvpd) || (deadlinePassed && !rsvpd) || (deadlinePassed && rsvpd)}
-           className={`w-full py-3 rounded-xl font-medium transition ${
-           deadlinePassed ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-           : rsvpd ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-          : spotsLeft === 0 ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
-          : 'bg-blue-600 hover:bg-blue-700 text-white'
-           }`}
-          >
-          {deadlinePassed && rsvpd ? 'Registered — Registration Closed'
-        : rsvpd ? 'Cancel RSVP'
-        : spotsLeft === 0 ? 'Event Full'
-        : deadlinePassed ? 'Registration Closed'
-         : 'RSVP to this Event'}
-        </button>
+          {user?.role !== 'super_admin' && (
+            <button
+                 onClick={handleRSVP}
+                 disabled={(spotsLeft === 0 && !rsvpd) || (deadlinePassed && !rsvpd) || (deadlinePassed && rsvpd)}
+                 className={`w-full py-3 rounded-xl font-medium transition ${
+                 deadlinePassed ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                   : rsvpd ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                   : spotsLeft === 0 ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                   : 'bg-blue-600 hover:bg-blue-700 text-white'
+                     }`}
+                    >
+              {deadlinePassed && rsvpd ? 'Registered — Registration Closed'
+                   : rsvpd ? 'Cancel RSVP'
+                   : spotsLeft === 0 ? 'Event Full'
+                   : deadlinePassed ? 'Registration Closed'
+                   : 'RSVP to this Event'}
+               </button>
+              )}
 
         </div>
       </div>

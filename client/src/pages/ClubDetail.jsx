@@ -99,11 +99,16 @@ const handleJoinLeave = async () => {
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-sm font-bold">U</div>
           <span className="font-semibold text-white">University Club Portal</span>
         </div>
-        <div className="flex items-center gap-10">
-          <button onClick={() => navigate('/dashboard')} className="text-gray-400 hover:text-white text-sm font-medium transition">Dashboard</button>
-          <button onClick={() => navigate('/clubs')} className="text-white text-sm font-medium border-b-2 border-blue-500 pb-0.5">Clubs</button>
-          <button onClick={() => navigate('/events')} className="text-gray-400 hover:text-white text-sm font-medium transition">Events</button>
-        </div>
+        {user?.role !== 'super_admin' && (
+             <div className="flex items-center gap-10">
+                  <button onClick={() => navigate('/dashboard')} className="text-gray-400 hover:text-white text-sm font-medium transition">Dashboard</button>
+                  <button onClick={() => navigate('/clubs')} className="text-white text-sm font-medium border-b-2 border-blue-500 pb-0.5">Clubs</button>
+                  <button onClick={() => navigate('/events')} className="text-gray-400 hover:text-white text-sm font-medium transition">Events</button>
+                </div>
+                 )}
+                {user?.role === 'super_admin' && (
+                   <span className="text-yellow-400 text-sm font-medium">Viewing as Super Admin</span>
+                 )}
         <div className="flex items-center gap-4">
           {user?.role === 'club_admin' && (
   <button onClick={() => navigate('/club-admin')} className="text-purple-400 hover:text-purple-300 text-sm transition">
@@ -124,9 +129,9 @@ const handleJoinLeave = async () => {
       )}
 
       <div className="w-full px-8 py-8">
-        <button onClick={() => navigate('/clubs')} className="text-gray-400 hover:text-white text-sm mb-6 flex items-center gap-2 transition">
-          ← Back to Clubs
-        </button>
+        <button onClick={() => user?.role === 'super_admin' ? window.close() : navigate('/clubs')} className="text-gray-400 hover:text-white text-sm mb-6 flex items-center gap-2 transition">
+            {user?.role === 'super_admin' ? '← Close Tab' : '← Back to Clubs'}
+          </button>
 
         {message && (
           <div className={`mb-6 px-4 py-3 rounded-lg text-sm ${message.includes('Joined') ? 'bg-green-500/10 border border-green-500/30 text-green-400' : message.includes('Left') ? 'bg-yellow-500/10 border border-yellow-500/30 text-yellow-400' : 'bg-red-500/10 border border-red-500/30 text-red-400'}`}>
