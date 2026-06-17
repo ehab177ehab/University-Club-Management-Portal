@@ -94,6 +94,15 @@ export default function ClubAdminEvents() {
     setTimeout(() => { setMessage(''); setError('') }, 3000)
   }
 
+const getEventState = (event) => {
+  const now = new Date()
+  const start = new Date(event.date)
+  const end = event.end_date ? new Date(event.end_date) : start
+  if (end < now) return 'past'
+  if (start <= now && now <= end) return 'ongoing'
+  return 'upcoming'
+}
+
   const fetchRsvps = async (eventId) => {
     try {
       const token = localStorage.getItem('token')
@@ -186,14 +195,12 @@ export default function ClubAdminEvents() {
                   <h3 className="font-medium text-white">{event.title}</h3>
                   {event.members_only && <span className="text-xs bg-purple-600/20 text-purple-400 px-2 py-0.5 rounded-full border border-purple-500/30">Members only</span>}
                   <span className={`text-xs px-2 py-0.5 rounded-full border ${
-                    (event.end_date ? new Date(event.end_date) : new Date(event.date)) < new Date()
-                      ? 'bg-gray-500/10 border-gray-500/30 text-gray-400'
-                      : event.status === 'upcoming'
-                        ? 'bg-green-500/10 border-green-500/30 text-green-400'
-                        : 'bg-gray-500/10 border-gray-500/30 text-gray-400'
-                  }`}>
-                    {(event.end_date ? new Date(event.end_date) : new Date(event.date)) < new Date() ? 'past' : event.status}
-                  </span>
+                     getEventState(event) === 'past' ? 'bg-gray-500/10 border-gray-500/30 text-gray-400'
+                    : getEventState(event) === 'ongoing' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                    : 'bg-green-500/10 border-green-500/30 text-green-400'
+                    }`}>
+                    {getEventState(event)}
+                    </span>
                 </div>
                 <div className="flex items-center gap-4 text-xs text-gray-500">
                   <span>📅 {formatDate(event.date)}</span>

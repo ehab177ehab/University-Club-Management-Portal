@@ -83,6 +83,15 @@ export default function EventDetail() {
     })
   }
 
+  const getEventState = (event) => {
+  const now = new Date()
+  const start = new Date(event.date)
+  const end = event.end_date ? new Date(event.end_date) : start
+  if (end < now) return 'past'
+  if (start <= now && now <= end) return 'ongoing'
+  return 'upcoming'
+}
+
   if (!event) return <div className="min-h-screen bg-gray-950 flex items-center justify-center text-white">Loading...</div>
 
   // Calculate spots left (null means unlimited)
@@ -141,12 +150,12 @@ export default function EventDetail() {
               <p className="text-blue-400 text-sm">Hosted by {event.club_name}</p>
             </div>
             <span className={`text-xs px-3 py-1 rounded-full border ${
-              event.status === 'upcoming' ? 'bg-green-500/10 border-green-500/30 text-green-400'
-              : event.status === 'ongoing' ? 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400'
-              : 'bg-gray-500/10 border-gray-500/30 text-gray-400'
-            }`}>
-              {event.status}
-            </span>
+               getEventState(event) === 'upcoming' ? 'bg-green-500/10 border-green-500/30 text-green-400'
+               : getEventState(event) === 'ongoing' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+               : 'bg-gray-500/10 border-gray-500/30 text-gray-400'
+             }`}>
+               {getEventState(event)}
+             </span>
           </div>
 
           {/* Event description */}

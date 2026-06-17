@@ -79,6 +79,15 @@ export default function SuperAdminEvents() {
     return endDate < new Date()
   }
 
+  const getEventState = (event) => {
+  const now = new Date()
+  const start = new Date(event.date)
+  const end = event.end_date ? new Date(event.end_date) : start
+  if (end < now) return 'past'
+  if (start <= now && now <= end) return 'ongoing'
+  return 'upcoming'
+}
+
   const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString('en-US', {
     month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
   })
@@ -99,7 +108,7 @@ export default function SuperAdminEvents() {
           <div key={event.id} className="flex flex-col">
 
             {/* Event card row — grayed out if event is fully past */}
-            <div className={`bg-gray-900 border rounded-2xl p-5 flex items-center justify-between ${isPast(event) ? 'border-gray-700 opacity-60' : 'border-gray-800'}`}>
+            <div className={`bg-gray-900 border rounded-2xl p-5 flex items-center justify-between ${getEventState(event) === 'past' ? 'border-gray-700 opacity-60' : 'border-gray-800'}`}>
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-1">
                   {/* Title — gray if past */}
@@ -107,8 +116,12 @@ export default function SuperAdminEvents() {
                   <span className="text-xs text-blue-400 bg-blue-600/10 border border-blue-500/20 px-2 py-0.5 rounded-full">{event.club_name}</span>
                   {event.members_only && <span className="text-xs bg-purple-600/20 text-purple-400 px-2 py-0.5 rounded-full border border-purple-500/30">Members only</span>}
                   {/* Status badge — shows 'past' if fully over, otherwise shows event status */}
-                  <span className={`text-xs px-2 py-0.5 rounded-full border ${isPast(event) ? 'bg-gray-500/10 border-gray-500/30 text-gray-500' : 'bg-green-500/10 border-green-500/30 text-green-400'}`}>
-                    {isPast(event) ? 'past' : event.status}
+                  <span className={`text-xs px-2 py-0.5 rounded-full border ${
+                    getEventState(event) === 'past' ? 'bg-gray-500/10 border-gray-500/30 text-gray-500'
+                    : getEventState(event) === 'ongoing' ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                    : 'bg-green-500/10 border-green-500/30 text-green-400'
+                      }`}>
+                   {getEventState(event)}
                   </span>
                 </div>
                 <div className="flex items-center gap-4 text-xs text-gray-500">
